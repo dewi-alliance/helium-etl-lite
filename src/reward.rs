@@ -1,6 +1,6 @@
 use crate::*;
-use tokio_postgres::{Client, NoTls, Error, Statement};
-use helium_jsonrpc::{transactions, transactions::Transaction};
+use tokio_postgres::{Client, Statement};
+use helium_jsonrpc::transactions;
 use std::convert::TryFrom;
 
 
@@ -11,21 +11,6 @@ pub struct Reward {
 	pub account: String,
 	pub gateway: String,
 	pub amount: i64,
-}
-
-
-impl Reward {
-	pub async fn new() -> Result<Self> {
-		let t: u64 = 33;
-		Ok(Self {
-        block: 234,
-        transaction_hash: "23l4kj".to_string(),
-        time : i64::try_from(33).unwrap(),
-        account: "kb".to_string(),
-        gateway: "this".to_string(),
-        amount: 234,        
-		})		
-	}
 }
 
 pub async fn prepare(client: &Client) -> Result<Statement>{

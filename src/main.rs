@@ -2,15 +2,13 @@ use helium_etl_lite::{
 	settings::Settings,
 	follower::Follower,
   migrate,
-  reward::Reward,
 };
-use helium_jsonrpc::{ Client, blocks, transactions, transactions::Transaction, error };
 use slog::{self, o, Drain, Logger, info};
 use std::{fs, fs::OpenOptions};
 use structopt::StructOpt;
 use tokio::time;
 
-use tokio_postgres::{Client as PgClient, NoTls, Error};
+use tokio_postgres::{Client as PgClient, NoTls};
 
 
 #[derive(Debug, StructOpt)]
@@ -40,7 +38,7 @@ async fn main() {
       let s = format!("host={} user={} password={} dbname={} ", 
         settings.database_url.host, settings.database_url.user, settings.database_url.password, settings.database_url.db);
 
-      let (mut client, connection) = tokio_postgres::connect(&s, NoTls).await.unwrap();
+      let (client, connection) = tokio_postgres::connect(&s, NoTls).await.unwrap();
 
       tokio::spawn(async move {
           if let Err(e) = connection.await {
@@ -67,7 +65,7 @@ async fn main() {
     });	
 
     info!(logger, "Starting the follower");
-    let mut follower = Follower::new(&settings, client).await.unwrap();
+    let mut follower = Follower::new(&settings, client, &logger, shutdown_listener.clone()).await.unwrap();
     let mut interval = time::interval(time::Duration::from_secs(10));
 
 
@@ -78,7 +76,7 @@ async fn main() {
           return
         },
         _ = interval.tick() => {
-          follower.run(shutdown_listener.clone(), &logger).await;
+          follower.run().await;
         }
       }
     } 

@@ -1,6 +1,5 @@
 use crate::*;
-use tokio_postgres::{Client, NoTls, Error};
-use refinery::{Report, Error as RefineryError};
+use tokio_postgres::NoTls;
 
 mod embedded {
     use refinery::embed_migrations;

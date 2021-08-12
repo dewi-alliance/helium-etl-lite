@@ -10,6 +10,8 @@ pub enum Error {
 	Config(#[from] config::ConfigError),
 	#[error("custom error")]
 	Custom(String),
+	#[error("helium_jsonrpc error")]
+	JrpcError(#[from] helium_jsonrpc::Error),
 }
 
 impl Error {

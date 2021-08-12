@@ -11,7 +11,8 @@ name = "helium_etl_lite"
 path = "src/main.rs"
 
 [dependencies]
-helium-jsonrpc = { git = "https://github.com/dewi-alliance/helium-jsonrpc-rs", rev="f4ec1800133d5c04ff36deff2ae2c23f5afe1229" }
+# helium-jsonrpc = { git = "https://github.com/dewi-alliance/helium-jsonrpc-rs", rev="f4ec1800133d5c04ff36deff2ae2c23f5afe1229" }
+helium-jsonrpc = { path = "../dewi/helium-jsonrpc-rs" }
 tokio = { version = "1.5.0", features = ["full"] }
 config = { version="0", default-features=false, features=["toml"] }
 serde = "1"
