@@ -155,7 +155,7 @@ pub async fn load_follower_info(logger: &Logger, pgclient: &PgClient) -> Result<
 
 pub async fn get_first_block(client: &Client, logger: &Logger, shutdown: triggered::Listener) -> Result<u64> {
 	info!(logger, "Scanning blocks by epoch to get first block on node.");
-	let mut height = 919650;//blocks::height(&client).await?;
+	let mut height = blocks::height(&client).await?;
 	let mut last_safe_height = height;
 	let mut in_last_epoch = false;
 

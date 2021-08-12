@@ -7,11 +7,7 @@ mod embedded {
 }
 
 pub async fn run(settings: &Settings) {
-	let s = format!("host={} user={} password={} dbname={} ", 
-		settings.database_url.host, settings.database_url.user, settings.database_url.password, settings.database_url.db);
-
-	let (mut client, connection) = tokio_postgres::connect(&s, NoTls).await.unwrap();
-
+	let (mut client, connection) = tokio_postgres::connect(&settings.database_url, NoTls).await.unwrap();
   tokio::spawn(async move {
       if let Err(e) = connection.await {
           eprintln!("connection error: {}", e);
@@ -19,6 +15,4 @@ pub async fn run(settings: &Settings) {
   });
   let res = embedded::migrations::runner().run_async(&mut client).await.unwrap();
   println!("{:?}", res);
-
-
 }
