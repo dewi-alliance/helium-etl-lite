@@ -5,6 +5,8 @@ This tool is best suited for collecting new data on the blockchain as it's happe
 
 ETL Lite relies on Helium's [blockchain-node]() to extract its data.
 
+**NOTE** ETL Lite will only load data as old as the snapshot loaded in blockchain-node.
+
 ## Get Started
 
 1. Follow [these steps](https://github.com/helium/blockchain-node#developer-usage) to build and run Helium's blockchain-node. 
