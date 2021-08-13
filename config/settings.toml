@@ -1,4 +1,4 @@
-node_addr = "http://192.168.1.55:4467"
+node_addr = "http://127.0.0.1:4467"
 database_url = "postgresql://etlite:password@127.0.0.1/helium_lite"
 # "rewards"    - load all rewards 
 # "full"       - load all rewards & challenges 
