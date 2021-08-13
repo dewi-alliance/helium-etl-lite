@@ -43,10 +43,6 @@ pub struct Settings {
 	#[serde(deserialize_with = "deserialize_etl_mode")]
 	pub mode: EtlMode,
 
-	pub challenge_filters: Filter,
-
-	pub rewards_filters: Filter,
-
 }
 
 impl Settings {

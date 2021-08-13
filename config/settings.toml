@@ -1,7 +1,6 @@
 node_addr = "http://192.168.1.55:4467"
 database_url = "postgresql://etlite:password@127.0.0.1/helium_lite"
 # "rewards"    - load all rewards 
-# "challenges" - load all challenges 
 # "full"       - load all rewards & challenges 
 # "filters"    - load only rewards or challenges associated with accounts or gateways 
 #								 listed below in filters
@@ -9,11 +8,3 @@ mode = "rewards"
 
 [log]
 log_dir = "log"
-
-[rewards_filters]
-gateways = [ "thing1", "thing2" ]
-accounts = [ "thing3", "thing4" ]
-
-[challenge_filters]
-gateways = []
-accounts = [ "thing7", "thing8" ]
