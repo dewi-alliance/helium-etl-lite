@@ -66,3 +66,8 @@ ETL Lite is currently in `Phase 1`
 |------------|--------|-----------|----------|---------|
 |height      | bigint |           | not null |
 |first_block | bigint |           | not null |
+
+## Rewards Data Note
+Because of the way blockchain-node stores rewards info, the first ~300 blocks after the snapshot height won't incldue `gateway` or `type` information for specific rewards. All rewards with `type = 'rewards_v2'` are the total rewards paid to that account vs individual rewards that you will see being loaded into the rewards db after the first ~300 blocks after the snapshot height of the node.
+
+*Please note*: anytime you see `1Wh4bh` as a value, this is the hash for null. You will see this in rewards of type `securities` and `rewards_v2` in the gateway field and for type `overages` in the account field. 
