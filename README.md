@@ -1,4 +1,5 @@
 # Helium Blockchain ETL Lite
+**This tool is still under development. This is an alpha release for testing**
 A "Light" ETL for the Helium blockchain. A lower resource-intensive option to Helium's [full ETL](https://github.com/helium/blockchain-etl/)
 
 This tool is best suited for collecting new data on the blockchain as it's happening versus historical data. You should probably use the full ETL if you need historical data.
