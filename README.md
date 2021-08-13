@@ -5,7 +5,8 @@ This tool is best suited for collecting new data on the blockchain as it's happe
 
 ETL Lite relies on Helium's [blockchain-node]() to extract its data.
 
-**NOTE**: ETL Lite will only load data as old as the snapshot loaded in blockchain-node.
+**NOTE**: ETL Lite will only load data as old as the height of the snapshot loaded in blockchain-node.  
+For more historical data please use Helium's [Full ETL](https://github.com/helium/blockchain-etl/).
 
 ## Get Started
 
@@ -59,3 +60,9 @@ Settings are found in the `settings.toml` file in the `config` directory.
 |gateway          | text   |           | not null |
 |amount           | bigint |           | not null |
 |type             | text   |           | not null |
+
+             Table "public.follower_info"
+|  Column    |  Type  | Collation | Nullable | Default |
+|------------|--------|-----------|----------|---------|
+|height      | bigint |           | not null |
+|first_block | bigint |           | not null |
