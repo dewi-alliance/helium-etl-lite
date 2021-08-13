@@ -38,7 +38,7 @@ For a more in-depth example, see the quick start guide in `docs`
 Settings are found in the `settings.toml` file in the `config` directory.
 
 `log_dir` : location to create log files. Default is `log` in the parent directory.  
-`mode`    : Choose which mode to run ETL Lite in. Currently (phase 1) `rewards` is supported.  
+`mode`    : Choose which mode to run ETL Lite in. Currently (phase 1) only `rewards` is supported.  
 `node_addr` : Ip address for blockchain-node.  
 `database_url` : Url to postgresql server. 
 
@@ -50,6 +50,10 @@ ETL Lite is currently in `Phase 1`
 | 1         | Rewards   						 |
 | 2         | Rewards, Full 				 |
 | 3         | Rewards, Full, Filters | 
+
+Rewards: Load all rewards only  
+Full: Load all transactions including rewards  
+Filters: Filter what is loaded by either gateway or account
 
 ## Database schemas
                    Table "public.rewards"
