@@ -27,7 +27,7 @@ ETL Lite relies on Helium's [blockchain-node]() to extract its data.
 5. Build from source
 
    `cargo build --release`
-   
+
 6. Update `settings.toml`. `node_addr` is your blockchain-node and `database_url` should be your postgres db
 7. Run `target/release/helium_etl_lite migrate` to run migrations then `target/release/helium_etl_lite start`
 
@@ -43,19 +43,19 @@ ETL Lite is currently in `Phase 1`
 ## Settings
 Settings are found in the `settings.toml` file in the `config` directory.
 
-`log_dir` : location to create log files. Default is `log` in the parent directory.
-`mode`    : Choose which mode to run ETL Lite in. Currently (phase 1) `rewards` is supported.
-`node_addr` : Ip address for blockchain-node.
-`database_url` : Url to postgresql server.
+`log_dir` : location to create log files. Default is `log` in the parent directory.  
+`mode`    : Choose which mode to run ETL Lite in. Currently (phase 1) `rewards` is supported.  
+`node_addr` : Ip address for blockchain-node.  
+`database_url` : Url to postgresql server.  
 
 ## Database schemas
                    Table "public.rewards"
-      Column      |  Type  | Collation | Nullable | Default
-------------------+--------+-----------+----------+---------
- block            | bigint |           | not null |
- transaction_hash | text   |           | not null |
- time             | bigint |           | not null |
- account          | text   |           | not null |
- gateway          | text   |           | not null |
- amount           | bigint |           | not null |
- type             | text   |           | not null |
+|     Column      |  Type  | Collation | Nullable | Default |
+|-----------------|--------|-----------|----------|---------|
+|block            | bigint |           | not null |
+|transaction_hash | text   |           | not null |
+|time             | bigint |           | not null |
+|account          | text   |           | not null |
+|gateway          | text   |           | not null |
+|amount           | bigint |           | not null |
+|type             | text   |           | not null |
