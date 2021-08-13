@@ -17,8 +17,8 @@ For more historical data please use Helium's [Full ETL](https://github.com/heliu
 
 3. Install postgresql
    
-   `sudo apt get install postgresql`
-   *or for MacOS*
+   `sudo apt get install postgresql`  
+   *or for MacOS*  
    `brew install postgresql`
 
 4. Clone this repo
@@ -32,22 +32,22 @@ For more historical data please use Helium's [Full ETL](https://github.com/heliu
 6. Update `settings.toml`. `node_addr` is your blockchain-node and `database_url` should be your postgres db
 7. Run `target/release/helium_etl_lite migrate` to run migrations then `target/release/helium_etl_lite start`
 
-## Mode Options
-ETL Lite is currently in `Phase 1` 
-
-| Phase     | Modes      						 |
-| --------- | ---------------------- |
-| 1         | Rewards   						 |
-| 2         | Rewards, Full 				 |
-| 3         | Rewards, Full, Filters |
-
 ## Settings
 Settings are found in the `settings.toml` file in the `config` directory.
 
 `log_dir` : location to create log files. Default is `log` in the parent directory.  
 `mode`    : Choose which mode to run ETL Lite in. Currently (phase 1) `rewards` is supported.  
 `node_addr` : Ip address for blockchain-node.  
-`database_url` : Url to postgresql server.  
+`database_url` : Url to postgresql server. 
+
+## Mode Options
+ETL Lite is currently in `Phase 1` 
+
+| Phase     | Modes Available				 |
+| --------- | ---------------------- |
+| 1         | Rewards   						 |
+| 2         | Rewards, Full 				 |
+| 3         | Rewards, Full, Filters | 
 
 ## Database schemas
                    Table "public.rewards"
