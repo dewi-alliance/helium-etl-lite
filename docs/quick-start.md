@@ -44,6 +44,7 @@ Once you have your instance up and running:
   `target/release/helium_etl_lite start`   
 3. Wait 15-30 min before starting ETL Lite  
   `target/release/helium_etl_lite start`
+
 You should be able to see what's happening in the logs in `log/etl_lite.log`
 
 TODO: service script
