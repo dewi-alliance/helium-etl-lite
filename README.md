@@ -10,6 +10,8 @@ For more historical data please use Helium's [Full ETL](https://github.com/heliu
 
 ## Get Started
 
+For a more in-depth example, see the quick start guide in `docs`
+
 1. Follow [these steps](https://github.com/helium/blockchain-node#developer-usage) to build and run Helium's blockchain-node. 
 2. Install cargo + rust 
    
