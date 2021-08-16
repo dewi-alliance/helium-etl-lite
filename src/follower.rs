@@ -52,8 +52,15 @@ impl Follower {
 					info!(self.logger, "shutting down Follower at height: {}", self.height);
 					return
 				},
-				current_height = blocks::height(&self.client) => {
-					match current_height.unwrap() - self.height {
+				maybe_current_height = blocks::height(&self.client) => {
+					let current_height = match maybe_current_height {
+						Ok(ch) => ch,
+						Err(e) => {
+							error!(self.logger, "Couldn't get height from node: {}", e);
+							return
+						}
+					};
+					match current_height - self.height {
 						0 => {
 							info!(self.logger, "height diff is 0.");
 							return
