@@ -66,8 +66,10 @@ impl Follower {
 							return
 						},
 						_ => {
-							self.height += 1;
-							self.get_block(&self.logger, self.height).await;
+							match self.get_block(&self.logger, self.height+1).await {
+								Ok(_) => self.height += 1,
+								Err(_) => return,
+							}
 							self.update_follower_info_height().await.unwrap();
 							info!(self.logger, "got block {}", self.height);
 						}
@@ -76,15 +78,18 @@ impl Follower {
 			}
 		}
 	}
-	pub async fn get_block(&self, logger: &Logger, height: u64) {
+	pub async fn get_block(&self, logger: &Logger, height: u64) -> Result<()> {
 		match blocks::get_raw(&self.client, &height).await {
 			Ok(b) => match self.mode {
 				EtlMode::Rewards => self.process_block(&self.logger, b).await,
 				_ => panic!("todo"),
 			},
-			Err(e) => error!(logger, "Couldn't get block {}: {}", height, e),
-		}
-		
+			Err(e) => {
+				error!(logger, "Couldn't get block {}: {}", height, e);
+				return Err(error::Error::Custom(format!("couldn't get block {}: {}", height, e)))
+			}
+		};
+		Ok(())
 	}
 	pub async fn process_block(&self, logger: &Logger, block: BlockRaw) {
 		for txn in block.transactions {
