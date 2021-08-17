@@ -6,7 +6,7 @@ use std::convert::TryFrom;
 
 pub struct Follower {
 	mode: EtlMode,
-	height: u64,
+	pub height: u64,
 	first_block: u64,
 	client: Client,
 	pgclient: PgClient,
@@ -45,7 +45,6 @@ impl Follower {
 		})
 	}
 	pub async fn run(&mut self) {
-		info!(self.logger, "Starting at height: {}", self.height);
 		loop {
 			tokio::select! {
 				_ = self.shutdown.clone() => {
@@ -69,11 +68,7 @@ impl Follower {
 							self.update_follower_info_height().await.unwrap();
 							info!(self.logger, "got block {}", self.height);
 						},
-						_ => {
-							info!(self.logger, "Caught up to node, waiting for new block");
-							return
-						}
-
+						_ => return
 					}
 				}
 			}
