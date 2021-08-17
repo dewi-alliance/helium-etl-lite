@@ -50,8 +50,8 @@ async fn main() {
         let _ = tokio::signal::ctrl_c().await;
         shutdown_trigger.trigger();
     });	
-    info!(logger, "Starting the follower");
     let mut follower = Follower::new(&settings, client, &logger, shutdown_listener.clone()).await.unwrap();
+    info!(logger, "Starting blockchain follower at height: {}", follower.height);
     let mut interval = time::interval(time::Duration::from_secs(10));
     loop {
       tokio::select! {
