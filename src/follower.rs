@@ -60,19 +60,20 @@ impl Follower {
 							return
 						}
 					};
-					match current_height - self.height {
-						0 => {
-							info!(self.logger, "height diff is 0.");
-							return
-						},
-						_ => {
+					match current_height {
+						h if h > self.height => {
 							match self.get_block(&self.logger, self.height+1).await {
 								Ok(_) => self.height += 1,
 								Err(_) => return,
 							}
 							self.update_follower_info_height().await.unwrap();
 							info!(self.logger, "got block {}", self.height);
+						},
+						_ => {
+							info!(self.logger, "Caught up to node, waiting for new block");
+							return
 						}
+
 					}
 				}
 			}
