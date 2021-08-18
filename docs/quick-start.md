@@ -41,7 +41,7 @@ Once you have your instance up and running:
   `make docker-start`
 2. Run migrations  
   `cd ../helium-etl-lite`   
-  `target/release/helium_etl_lite start`   
+  `target/release/helium_etl_lite migrate`   
 3. Wait 15-30 min before starting ETL Lite  
   `target/release/helium_etl_lite start`
 
