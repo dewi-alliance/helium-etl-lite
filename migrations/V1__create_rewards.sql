@@ -7,3 +7,5 @@ create table rewards (
        amount bigint not null,
        type text not null
 );
+
+create index on rewards (block);
