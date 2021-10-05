@@ -1,6 +1,6 @@
 use crate::*;
 use slog::{error, info, o, Logger};
-use helium_jsonrpc::{ Client, blocks, blocks::BlockRaw, transactions, transactions::Transaction };
+use helium_jsonrpc::{ Client, blocks, blocks::BlockRaw, transactions, Transaction };
 use tokio_postgres::{ Client as PgClient };
 use std::convert::TryFrom;
 
@@ -93,7 +93,7 @@ impl Follower {
 				"rewards_v2" => {
 					let rewards = match transactions::get(&self.client, &txn.hash).await {
 						Ok(t) => match t {
-							Transaction::RewardsV2 { rewards, .. } => rewards,
+							Transaction::RewardsV2(rewards) => rewards.rewards,
 							_ => {
 								error!(logger, "Error getting rewards txn: '{}'", txn.hash);
 								return
@@ -192,7 +192,7 @@ pub async fn get_first_block(client: &Client, logger: &Logger, shutdown: trigger
 						"rewards_v2" => {
 							info!(&logger, "Getting start_epoch from block {}", height);
 							match transactions::get(&client, &txn.hash).await.unwrap() {
-								Transaction::RewardsV2 { start_epoch, .. } => height = start_epoch,
+								Transaction::RewardsV2(rewards) => height = rewards.start_epoch,
 								_ => ()
 							}
 						},
