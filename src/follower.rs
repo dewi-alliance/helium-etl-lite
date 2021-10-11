@@ -78,7 +78,7 @@ impl Follower {
 		match blocks::get_raw(&self.client, &height).await {
 			Ok(b) => match self.mode {
 				EtlMode::Rewards => self.process_block(&self.logger, b).await,
-				_ => panic!("todo"),
+				_ => panic!("Only Rewards mode currently supported"),
 			},
 			Err(e) => {
 				error!(logger, "Couldn't get block {}: {}", height, e);
