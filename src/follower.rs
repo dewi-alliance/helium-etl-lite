@@ -34,6 +34,12 @@ impl Follower {
 			}
 		};
 
+		let logger = match settings.mode {
+			EtlMode::Rewards => logger.new(o!("module" => "RewardsMode")),
+			EtlMode::Full => logger.new(o!("module" => "FullMode")),
+			_ => panic!("Mode not supported"),
+		};
+
 		Ok(Self {
 			mode: settings.mode,
 			height: info.height,
@@ -41,7 +47,7 @@ impl Follower {
 			client: client,
 			pgclient: pgclient,
 			shutdown: shutdown,
-			logger: logger.new(o!("module" => "follower")),
+			logger: logger,
 		})
 	}
 	pub async fn run(&mut self) {
@@ -76,10 +82,7 @@ impl Follower {
 	}
 	pub async fn get_block(&self, logger: &Logger, height: u64) -> Result<()> {
 		match blocks::get_raw(&self.client, &height).await {
-			Ok(b) => match self.mode {
-				EtlMode::Rewards => self.process_block(&self.logger, b).await,
-				_ => panic!("Only Rewards mode currently supported"),
-			},
+			Ok(b) => self.load_block(&self.logger, b).await,
 			Err(e) => {
 				error!(logger, "Couldn't get block {}: {}", height, e);
 				return Err(error::Error::Custom(format!("couldn't get block {}: {}", height, e)))
@@ -87,8 +90,8 @@ impl Follower {
 		};
 		Ok(())
 	}
-	pub async fn process_block(&self, logger: &Logger, block: BlockRaw) {
-		for txn in block.transactions {
+	pub async fn load_block(&self, logger: &Logger, block: BlockRaw) {
+		for txn in &block.transactions {
 			match txn.r#type.as_str() {
 				"rewards_v2" => {
 					let rewards = match transactions::get(&self.client, &txn.hash).await {
@@ -115,6 +118,28 @@ impl Follower {
 				_ => (),
 			}
 		} 
+		match self.mode {
+			EtlMode::Full => {
+			info!(logger, "Loading block {} into transactions table", block.height);
+
+			for txn in block.transactions {
+				let transaction = match transactions::get(&self.client, &txn.hash).await {
+					Ok(t) => t,
+					Err(e) => {
+						error!(logger, "Error getting transaction: {} {}",  txn.hash, e);
+						return
+					}
+				};
+				match transaction::add_transaction(&self.pgclient, block.height, txn.hash.to_string(), txn.r#type.as_str(), transaction).await {
+					Ok(_) => (),
+					Err(e) => error!(logger, "Error adding transaction: {}. {}", txn.hash, e),
+				}
+			}			
+		},
+			_ => (),
+		}
+		info!(logger, "Done!");
+		panic!("done");
 	}
 
 	pub async fn update_follower_info_first_block(&self) -> Result<Vec<tokio_postgres::Row>>{

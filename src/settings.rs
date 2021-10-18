@@ -72,6 +72,7 @@ where
     let mode = match String::deserialize(d)?.to_lowercase().as_str() {
         "rewards" => EtlMode::Rewards,
         "challenges" => EtlMode::Challenges,
+        "full" => EtlMode::Full,
         unsupported => {
             return Err(de::Error::custom(format!(
                 "unsupported etl mode: \"{}\"",
