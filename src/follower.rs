@@ -211,19 +211,27 @@ pub async fn get_first_block(client: &Client, logger: &Logger, shutdown: trigger
 						}
 					}
 				};
-				last_safe_height = height;
 				for txn in block.transactions {
 					match txn.r#type.as_str() {
 						"rewards_v2" => {
 							info!(&logger, "Getting start_epoch from block {}", height);
-							match transactions::get(&client, &txn.hash).await.unwrap() {
-								Transaction::RewardsV2(rewards) => height = rewards.start_epoch,
-								_ => ()
+							match transactions::get(&client, &txn.hash).await {
+								Ok(t) => {
+									match t {
+										Transaction::RewardsV2(rewards) => height = rewards.start_epoch,
+										_ => ()
+									}
+								}
+								Err(e) => {
+									error!(logger, "Error getting rewards txn: {}", e);
+									return Ok(last_safe_height);
+								}
 							}
 						},
 						_ => (),
 					};
 				}
+				last_safe_height = height;				
 				height -= 1;	
 			}
 		}
