@@ -6,5 +6,11 @@ database_url = "postgresql://etlite:password@127.0.0.1/helium_lite"
 #								 listed below in filters
 mode = "rewards"
 
+
+# "true" or "false" 
+# If set to "true", scan the node for the oldest block it has and start loading transactions from there. 
+# If set to "false", start loading blocks starting at the current height of the node.
+backfill = "false"
+
 [log]
 log_dir = "log"
