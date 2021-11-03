@@ -25,10 +25,14 @@ impl Follower {
 		let info = match load_follower_info(&logger, &pgclient).await {
 			Ok(i) => i,
 			Err(_) => {
-				let first = get_first_block(&client, &logger, shutdown.clone()).await.unwrap();
+				let first = match settings.backfill {
+					true => get_first_block(&client, &logger, shutdown.clone()).await.unwrap(),
+					false => blocks::height(&client).await?
+				};
+				
 				create_follower_info(&logger, &pgclient, first).await.unwrap();
 				Info {
-					height: first,
+					height: first-1,
 					first_block: first,
 				}				
 			}
