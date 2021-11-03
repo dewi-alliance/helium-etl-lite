@@ -138,8 +138,6 @@ impl Follower {
 		},
 			_ => (),
 		}
-		info!(logger, "Done!");
-		panic!("done");
 	}
 
 	pub async fn update_follower_info_first_block(&self) -> Result<Vec<tokio_postgres::Row>>{
