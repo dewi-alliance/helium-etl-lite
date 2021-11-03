@@ -46,7 +46,8 @@ Settings are found in the `settings.toml` file in the `config` directory.
 `database_url` : Url to postgresql server. 
 
 ## Mode Options
-ETL Lite is currently in `Phase 1` 
+ETL Lite is currently in `Phase 2`
+*For Full mode: state_channel_close_v1 transactions are currently not supported due to [this](https://github.com/dewi-alliance/helium-jsonrpc-rs/issues/8) issue. 
 
 | Phase     | Modes Available				 |
 | --------- | ---------------------- |
