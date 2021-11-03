@@ -43,6 +43,9 @@ pub struct Settings {
 	#[serde(deserialize_with = "deserialize_etl_mode")]
 	pub mode: EtlMode,
 
+	#[serde(deserialize_with = "deserialize_backfill")]	
+	pub backfill: bool,
+
 }
 
 impl Settings {
@@ -80,4 +83,21 @@ where
         }
     };
     Ok(mode)
+}
+
+fn deserialize_backfill<'de, D>(d: D) -> std::result::Result<bool, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let backfill = match String::deserialize(d)?.to_lowercase().as_str() {
+        "true" => true,
+        "false" => false,
+        unsupported => {
+            return Err(de::Error::custom(format!(
+                "unsupported etl mode: \"{}\"",
+                unsupported
+            )))
+        }
+    };
+    Ok(backfill)
 }
