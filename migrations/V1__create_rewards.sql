@@ -8,4 +8,5 @@ create table rewards (
        type text not null
 );
 
-create index on rewards (block);
+create index rewards_block_idx on rewards(block);
+create index rewards_gateway_idx on rewards(gateway);
