@@ -1,7 +1,5 @@
 # Helium Blockchain ETL Lite
 
-**This tool is still under development. This is an alpha release for testing**
-
 A "Light" ETL for the Helium blockchain. A lower resource-intensive option to Helium's [full ETL](https://github.com/helium/blockchain-etl/)
 
 This tool is best suited for collecting new data on the blockchain as it's happening versus historical data. You should probably use the full ETL if you need historical data.
@@ -16,6 +14,10 @@ For more historical data please use Helium's [Full ETL](https://github.com/heliu
 For a more in-depth example, see the [quick start guide](https://github.com/dewi-alliance/helium-etl-lite/blob/main/docs/quick-start.md) in `docs`
 
 1. Follow [these steps](https://github.com/helium/blockchain-node#developer-usage) to build and run Helium's blockchain-node. 
+**NOTE** You must change `{store_json, false}` to `{store_json, true}` in blockchain_node's sys.config file. Run this command before `make release`
+
+  `sed -i "/{blockchain,/{N;s/$/\n   {json_store, true},/}" config/dev.config`
+  
 2. Install cargo + rust 
    
    `curl https://sh.rustup.rs -sSf | sh`
