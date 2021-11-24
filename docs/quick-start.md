@@ -16,7 +16,9 @@ Once you have your instance up and running:
   relog into your shell for the changes to take place
 2. Download blockchain-node code  
   `git clone git clone https://github.com/helium/blockchain-node.git`
-3. Build docker container  
+3. Update blockchain-node config to load all json (needed for rewards data)
+  `sed -i "/{blockchain,/{N;s/$/\n   {json_store, true},/}" config/dev.config`
+4. Build docker container  
   `make docker-build`
 
 ## Create database and postgres user
