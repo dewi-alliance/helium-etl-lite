@@ -16,7 +16,7 @@ For a more in-depth example, see the [quick start guide](https://github.com/dewi
 1. Follow [these steps](https://github.com/helium/blockchain-node#developer-usage) to build and run Helium's blockchain-node. 
 **NOTE** You must change `{store_json, false}` to `{store_json, true}` in blockchain_node's sys.config file. Run this command before `make release`
 
-  `sed -i "/{blockchain,/{N;s/$/\n   {json_store, true},/}" config/dev.config`
+  `sed -i "/{blockchain,/{N;s/$/\n   {store_json, true},/}" config/dev.config`
   
 2. Install cargo + rust 
    
