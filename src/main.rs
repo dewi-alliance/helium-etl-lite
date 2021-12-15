@@ -1,6 +1,6 @@
 use helium_etl_lite::{
-	settings::Settings,
-	follower::Follower,
+  settings::Settings,
+  follower::Follower,
   migrate,
 };
 use slog::{self, o, Drain, Logger, info};
@@ -25,7 +25,7 @@ pub enum Cmd {
 #[tokio::main]
 async fn main() {
   let cli = Cli::from_args();
-	let settings = Settings::new().unwrap();
+  let settings = Settings::new().unwrap();
   match cli.cmd {
     Cmd::Start => {
       let (client, connection) = tokio_postgres::connect(&settings.database_url, NoTls).await.unwrap();
@@ -43,13 +43,13 @@ async fn main() {
   }  
 
   pub async fn run(settings: &Settings, client: PgClient) {
-  	let logger = start_logger(&settings);
-  	info!(logger, "hello!");
+    let logger = start_logger(&settings);
+    info!(logger, "hello!");
     let (shutdown_trigger, shutdown_listener) = triggered::trigger();
     tokio::spawn(async move {
         let _ = tokio::signal::ctrl_c().await;
         shutdown_trigger.trigger();
-    });	
+    }); 
     let mut follower = Follower::new(&settings, client, &logger, shutdown_listener.clone()).await.unwrap();
     info!(logger, "Starting blockchain follower at height: {}", follower.height);
     let mut interval = time::interval(time::Duration::from_secs(10));
@@ -68,22 +68,22 @@ async fn main() {
 }
 
 fn start_logger(settings: &Settings) -> Logger {
-	let log_dir = &settings.log.log_dir;
-	let log_path = format!("{}/etl_lite.log", log_dir);
-	fs::create_dir_all(log_dir).unwrap();
-	let file = OpenOptions::new()
-		.create(true)
-		.write(true)
-		.truncate(true)
-		.open(log_path)
-		.expect("opening file");
-	let decorator = slog_term::PlainDecorator::new(file);
-	let drain = slog_term::FullFormat::new(decorator)
-		.use_custom_timestamp(slog_term::timestamp_local)
-		.build()
-		.fuse();
-	let async_drain = slog_async::Async::new(drain)
-		.build()
-		.fuse();
-	slog::Logger::root(async_drain, o!())
+  let log_dir = &settings.log.log_dir;
+  let log_path = format!("{}/etl_lite.log", log_dir);
+  fs::create_dir_all(log_dir).unwrap();
+  let file = OpenOptions::new()
+    .create(true)
+    .write(true)
+    .truncate(true)
+    .open(log_path)
+    .expect("opening file");
+  let decorator = slog_term::PlainDecorator::new(file);
+  let drain = slog_term::FullFormat::new(decorator)
+    .use_custom_timestamp(slog_term::timestamp_local)
+    .build()
+    .fuse();
+  let async_drain = slog_async::Async::new(drain)
+    .build()
+    .fuse();
+  slog::Logger::root(async_drain, o!())
 }
