@@ -7,7 +7,6 @@ use http::uri::Uri;
 #[derive(Debug, Deserialize, Clone, Copy)]
 pub enum EtlMode {
 	Rewards,
-	Challenges,
 	Full,
 	Filters,
 }
@@ -74,8 +73,8 @@ where
 {
     let mode = match String::deserialize(d)?.to_lowercase().as_str() {
         "rewards" => EtlMode::Rewards,
-        "challenges" => EtlMode::Challenges,
         "full" => EtlMode::Full,
+        "filters" => EtlMode::Filters,
         unsupported => {
             return Err(de::Error::custom(format!(
                 "unsupported etl mode: \"{}\"",
