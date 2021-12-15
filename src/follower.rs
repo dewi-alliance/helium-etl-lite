@@ -12,6 +12,7 @@ pub struct Follower {
 	pgclient: PgClient,
 	shutdown: triggered::Listener,
 	logger: Logger,
+	filters: filter::Filters,
 }
 
 pub struct Info {
@@ -41,9 +42,18 @@ impl Follower {
 		let logger = match settings.mode {
 			EtlMode::Rewards => logger.new(o!("module" => "RewardsMode")),
 			EtlMode::Full => logger.new(o!("module" => "FullMode")),
-			_ => panic!("Mode not supported"),
+			EtlMode::Filters => logger.new(o!("module" => "FiltersMode")),
 		};
 
+		let filters = match settings.mode {
+			EtlMode::Filters => {
+				match filter::get(&pgclient).await {
+					Ok(f) => f,
+					Err(e) => panic!("problem getting filters: {}", e),
+				}
+			},
+			_ => filter::Filters{ accounts: vec!(), gateways: vec!() },
+		};
 		Ok(Self {
 			mode: settings.mode,
 			height: info.height,
@@ -52,6 +62,7 @@ impl Follower {
 			pgclient: pgclient,
 			shutdown: shutdown,
 			logger: logger,
+			filters: filters,
 		})
 	}
 	pub async fn run(&mut self) {
@@ -95,6 +106,10 @@ impl Follower {
 		Ok(())
 	}
 	pub async fn load_block(&self, logger: &Logger, block: BlockRaw) {
+		match self.mode {
+			EtlMode::Full => info!(logger, "Loading txns in block {}", block.height),
+			_ => (),
+		}
 		for txn in &block.transactions {
 			match txn.r#type.as_str() {
 				"rewards_v2" => {
@@ -112,36 +127,75 @@ impl Follower {
 						}
 					};
 					info!(logger, "rewards in block {} with {}", block.height.to_string(), rewards.len());
-					for r in rewards {
-						match reward::add_reward(&self.pgclient, block.height, block.time, block.hash.to_string(), &r).await {
-							Ok(_) => (),
-							Err(e) => error!(logger, "Error adding reward {}", e),
+					'rloop: for r in rewards {
+						match self.mode {
+							EtlMode::Rewards | EtlMode::Full => {
+								match reward::add_reward(&self.pgclient, block.height, block.time, block.hash.to_string(), &r).await {
+									Ok(_) => (),
+									Err(e) => error!(logger, "Error adding reward {}", e),
+								}
+							},
+							EtlMode::Filters => {
+								match r.account {
+									Some(ref a) => {
+										for filter_account in &self.filters.accounts {
+											match &a {
+												f if f == &filter_account => {
+													info!(logger, "loading reward for account: {} -> {}", filter_account, r.r#type);
+													match reward::add_reward(&self.pgclient, block.height, block.time, block.hash.to_string(), &r).await {
+														Ok(_) => (),
+														Err(e) => error!(logger, "Error adding reward {}", e),
+													}															
+													continue 'rloop;
+												},
+												_ => (),
+											}
+										}
+									},
+									None => (),
+								}
+								match r.gateway {
+									Some(ref g) => {
+										for filter_gateway in &self.filters.gateways {
+											match &g {
+												f if f == &filter_gateway => {
+													info!(logger, "loading reward for gateway: {} -> {}", filter_gateway, r.r#type);
+													match reward::add_reward(&self.pgclient, block.height, block.time, block.hash.to_string(), &r).await {
+														Ok(_) => (),
+														Err(e) => error!(logger, "Error adding reward {}", e),
+													}																														
+													continue 'rloop;
+												},
+												_ => (),
+											}
+										}
+									},
+									None => (),											
+								}
+							},
 						}
 					}
 				},
 				_ => (),
 			}
-		} 
-		match self.mode {
-			EtlMode::Full => {
-			info!(logger, "Loading block {} into transactions table", block.height);
+			match self.mode {
+				EtlMode::Full => {
 
-			for txn in block.transactions {
-				let transaction = match transactions::get(&self.client, &txn.hash).await {
-					Ok(t) => t,
-					Err(e) => {
-						error!(logger, "Error getting transaction: {} {}",  txn.hash, e);
-						return
+					let transaction = match transactions::get(&self.client, &txn.hash).await {
+						Ok(t) => t,
+						Err(e) => {
+							error!(logger, "Error getting transaction: [{}] {} {}",  txn.r#type, txn.hash, e);
+							return
+						}
+					};
+					match transaction::add_transaction(&self.pgclient, block.height, txn.hash.to_string(), txn.r#type.as_str(), transaction).await {
+						Ok(_) => (),
+						Err(e) => error!(logger, "Error adding transaction: {}. {}", txn.hash, e),
 					}
-				};
-				match transaction::add_transaction(&self.pgclient, block.height, txn.hash.to_string(), txn.r#type.as_str(), transaction).await {
-					Ok(_) => (),
-					Err(e) => error!(logger, "Error adding transaction: {}. {}", txn.hash, e),
-				}
-			}			
-		},
-			_ => (),
-		}
+				},
+				_ => (),							
+			}
+		} 
 	}
 
 	pub async fn update_follower_info_first_block(&self) -> Result<Vec<tokio_postgres::Row>>{
