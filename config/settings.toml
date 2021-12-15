@@ -1,16 +1,16 @@
-node_addr = "http://127.0.0.1:4467"
+node_addr = "http://192.168.1.21:4467"
 database_url = "postgresql://etlite:password@127.0.0.1/helium_lite"
 # "rewards"    - load all rewards 
 # "full"       - load all rewards & challenges 
 # "filters"    - load only rewards or challenges associated with accounts or gateways 
 #								 listed below in filters
-mode = "rewards"
+mode = "full"
 
 
 # "true" or "false" 
 # If set to "true", scan the node for the oldest block it has and start loading transactions from there. 
 # If set to "false", start loading blocks starting at the current height of the node.
-backfill = "false"
+backfill = "true"
 
 [log]
 log_dir = "log"
