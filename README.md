@@ -89,22 +89,22 @@ example:
 |first_block | bigint |           | not null |
 
                 Table "public.transactions"
- Column |       Type       | Collation | Nullable | Default
---------+------------------+-----------+----------+---------
- block  | bigint           |           | not null |
- hash   | text             |           | not null |
- type   | transaction_type |           | not null |
- fields | jsonb            |           | not null |
+| Column |       Type       | Collation | Nullable | Default |
+|--------|------------------|-----------|----------|---------|
+| block  | bigint           |           | not null |
+| hash   | text             |           | not null |
+| type   | transaction_type |           | not null |
+| fields | jsonb            |           | not null |
 Indexes:
     "transactions_pkey" PRIMARY KEY, btree (hash)
     "transaction_block_idx" btree (block)
     "transaction_type_idx" btree (type)
 
                     Table "public.filters"
- Column |    Type     | Collation | Nullable | Default
---------+-------------+-----------+----------+---------
- type   | filter_type |           | not null |
- value  | text        |           | not null |
+| Column |    Type     | Collation | Nullable | Default |
+|--------|-------------|-----------|----------|---------|
+| type   | filter_type |           | not null |
+| value  | text        |           | not null |
 
 ## Rewards Data Note
 Because of the way blockchain-node stores rewards info, the first ~300 blocks after the snapshot height won't incldue `gateway` or `type` information for specific rewards. All rewards with `type = 'rewards_v2'` are the total rewards paid to that account vs individual rewards that you will see being loaded into the rewards db after the first ~300 blocks after the snapshot height of the node.
