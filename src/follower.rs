@@ -1,6 +1,6 @@
 use crate::*;
 use slog::{error, info, o, Logger};
-use helium_jsonrpc::{ Client, blocks, blocks::BlockRaw, transactions, Transaction };
+use helium_jsonrpc::{ Client, blocks, transactions, Transaction };
 use tokio_postgres::{ Client as PgClient };
 use std::convert::TryFrom;
 use crate::block_processor::BlockProcessor;
@@ -85,7 +85,10 @@ impl Follower {
           match current_height {
             h if h > self.height => match self.start_block_processing().await {
               Ok(_) => (),
-              Err(_) => {},
+              Err(e) => {
+                error!(self.logger, "error processing block: {}", e);
+                return
+              },
             },
             _ => return
           }
@@ -102,9 +105,7 @@ impl Follower {
       }
     };
 
-    let mut block_processor = BlockProcessor::new(self.mode, self.height, &self.client, pgtran, &self.logger, &self.filters);
-    block_processor.process().await?;
-
+    BlockProcessor::new(self.mode, self.height, &self.client, pgtran, &self.logger, &self.filters).process().await?;
     self.height += 1;
 
     Ok(())

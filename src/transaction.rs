@@ -1,5 +1,5 @@
 use crate::*;
-use tokio_postgres::{Client, Statement, Transaction as PgTransaction};
+use tokio_postgres::{Statement, Transaction as PgTransaction};
 use std::convert::TryFrom;
 use helium_jsonrpc::Transaction;
 use tokio_postgres::types::{Json};

@@ -1,5 +1,5 @@
 use crate::*;
-use slog::{error, info, o, Logger};
+use slog::{error, info, Logger};
 use helium_jsonrpc::{ Client, blocks, blocks::BlockRaw, transactions, Transaction };
 use tokio_postgres::{ Transaction as PgTransaction };
 use std::convert::TryFrom;

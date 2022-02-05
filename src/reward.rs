@@ -1,5 +1,5 @@
 use crate::*;
-use tokio_postgres::{Client, Transaction, Statement};
+use tokio_postgres::{Transaction, Statement};
 use helium_api::models::transactions::Reward;
 use std::convert::TryFrom;
 
