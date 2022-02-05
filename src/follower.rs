@@ -3,6 +3,7 @@ use slog::{error, info, o, Logger};
 use helium_jsonrpc::{ Client, blocks, blocks::BlockRaw, transactions, Transaction };
 use tokio_postgres::{ Client as PgClient };
 use std::convert::TryFrom;
+use crate::block_processor::BlockProcessor;
 
 pub struct Follower {
   mode: EtlMode,
@@ -80,14 +81,11 @@ impl Follower {
               return
             }
           };
+
           match current_height {
-            h if h > self.height => {
-              match self.get_block(&self.logger, self.height+1).await {
-                Ok(_) => self.height += 1,
-                Err(_) => return,
-              }
-              self.update_follower_info_height().await.unwrap();
-              info!(self.logger, "got block {}", self.height);
+            h if h > self.height => match self.start_block_processing().await {
+              Ok(_) => (),
+              Err(_) => {},
             },
             _ => return
           }
@@ -95,123 +93,22 @@ impl Follower {
       }
     }
   }
-  pub async fn get_block(&self, logger: &Logger, height: u64) -> Result<()> {
-    match blocks::get_raw(&self.client, &height).await {
-      Ok(b) => self.load_block(&self.logger, b).await?,
+  pub async fn start_block_processing(&mut self) -> Result<()> {
+    let pgtran = match self.pgclient.build_transaction().start().await {
+      Ok(t) => t,
       Err(e) => {
-        error!(logger, "Couldn't get block {}: {}", height, e);
-        return Err(error::Error::Custom(format!("couldn't get block {}: {}", height, e)))
+        error!(self.logger, "Couldn't start database transaction: {}", e);
+        return Err(error::Error::custom(e.to_string()));
       }
     };
+
+    let mut block_processor = BlockProcessor::new(self.mode, self.height, &self.client, pgtran, &self.logger, &self.filters);
+    block_processor.process().await?;
+
+    self.height += 1;
+
     Ok(())
   }
-  pub async fn load_block(&self, logger: &Logger, block: BlockRaw) -> Result<()> {
-    match self.mode {
-      EtlMode::Full => info!(logger, "Loading txns in block {}", block.height),
-      _ => (),
-    }
-    for txn in &block.transactions {
-      match txn.r#type.as_str() {
-        "rewards_v2" => {
-          let rewards = match transactions::get(&self.client, &txn.hash).await {
-            Ok(t) => match t {
-              Transaction::RewardsV2(rewards) => rewards.rewards,
-              _ => {
-                error!(logger, "Error getting rewards txn: '{}'", txn.hash);
-                return Err(error::Error::Custom(format!("Error getting rewards txn: '{}'", txn.hash)))
-              }
-            },
-            Err(e) => {
-              error!(logger, "Error getting rewards txn: '{}' {}", txn.hash, e);
-              return Err(error::Error::Custom(format!("Error getting rewards txn: '{}' {}", txn.hash, e)))
-            }
-          };
-          info!(logger, "rewards in block {} with {}", block.height.to_string(), rewards.len());
-          'rloop: for r in rewards {
-            match self.mode {
-              EtlMode::Rewards | EtlMode::Full => {
-                match reward::add_reward(&self.pgclient, block.height, block.time, block.hash.to_string(), &r).await {
-                  Ok(_) => (),
-                  Err(e) => error!(logger, "Error adding reward {}", e),
-                }
-              },
-              EtlMode::Filters => {
-                match r.account {
-                  Some(ref a) => {
-                    for filter_account in &self.filters.accounts {
-                      match &a {
-                        f if f == &filter_account => {
-                          info!(logger, "loading reward for account: {} -> {}", filter_account, r.r#type);
-                          match reward::add_reward(&self.pgclient, block.height, block.time, block.hash.to_string(), &r).await {
-                            Ok(_) => (),
-                            Err(e) => error!(logger, "Error adding reward {}", e),
-                          }                             
-                          continue 'rloop;
-                        },
-                        _ => (),
-                      }
-                    }
-                  },
-                  None => (),
-                }
-                match r.gateway {
-                  Some(ref g) => {
-                    for filter_gateway in &self.filters.gateways {
-                      match &g {
-                        f if f == &filter_gateway => {
-                          info!(logger, "loading reward for gateway: {} -> {}", filter_gateway, r.r#type);
-                          match reward::add_reward(&self.pgclient, block.height, block.time, block.hash.to_string(), &r).await {
-                            Ok(_) => (),
-                            Err(e) => error!(logger, "Error adding reward {}", e),
-                          }                                                           
-                          continue 'rloop;
-                        },
-                        _ => (),
-                      }
-                    }
-                  },
-                  None => (),                     
-                }
-              },
-            }
-          }
-        },
-        _ => (),
-      }
-      match self.mode {
-        EtlMode::Full => {
-
-          let transaction = match transactions::get(&self.client, &txn.hash).await {
-            Ok(t) => t,
-            Err(e) => {
-              error!(logger, "Error getting transaction: [{}] {} {}",  txn.r#type, txn.hash, e);
-              return Err(error::Error::Custom(format!("Error getting transaction: [{}] {} {}",  txn.r#type, txn.hash, e)))
-            }
-          };
-          match transaction::add_transaction(&self.pgclient, block.height, txn.hash.to_string(), txn.r#type.as_str(), transaction).await {
-            Ok(_) => (),
-            Err(e) => error!(logger, "Error adding transaction: {}. {}", txn.hash, e),
-          }
-        },
-        _ => (),              
-      }
-    }
-    Ok(()) 
-  }
-
-  pub async fn update_follower_info_first_block(&self) -> Result<Vec<tokio_postgres::Row>>{
-    let stmt = self.pgclient.prepare("UPDATE follower_info SET first_block = $1").await.unwrap();
-    self.pgclient.query(&stmt, &[&i64::try_from(self.first_block).unwrap()])
-      .await
-      .map_err(|e| error::Error::PgError(e))
-  }
-
-  pub async fn update_follower_info_height(&self) -> Result<Vec<tokio_postgres::Row>>{
-    let stmt = self.pgclient.prepare("UPDATE follower_info SET height = $1").await.unwrap();
-    self.pgclient.query(&stmt, &[&i64::try_from(self.height).unwrap()])
-      .await
-      .map_err(|e| error::Error::PgError(e))
-  } 
 }
 
 pub async fn create_follower_info(logger: &Logger, pgclient: &PgClient, first_block: u64) -> Result<Vec<tokio_postgres::Row>> {
