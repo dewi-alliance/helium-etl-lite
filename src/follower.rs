@@ -105,7 +105,7 @@ impl Follower {
       }
     };
 
-    BlockProcessor::new(self.mode, self.height, &self.client, pgtran, &self.logger, &self.filters).process().await?;
+    BlockProcessor::new(self.mode, self.height + 1, &self.client, pgtran, &self.logger, &self.filters).process().await?;
     self.height += 1;
 
     Ok(())

@@ -35,7 +35,6 @@ impl<'a> BlockProcessor<'a> {
         }
 
         info!(self.logger, "got block {}", self.height);
-        self.height += 1;
 
         match self.update_follower_info_height().await {
             Ok(_) => {},
