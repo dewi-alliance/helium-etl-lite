@@ -1,0 +1,1 @@
+ALTER TYPE transaction_type ADD VALUE 'transfer_hotspot_v2';
