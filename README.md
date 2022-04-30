@@ -50,7 +50,6 @@ Settings are found in the `settings.toml` file in the `config` directory.
 ## Mode Options
 ETL Lite is currently in `Phase 3`
 
-*For Full mode: state_channel_close_v1 transactions are currently not supported due to [this](https://github.com/dewi-alliance/helium-jsonrpc-rs/issues/8) issue.*
 
 
 | Phase     | Modes Available				 |
