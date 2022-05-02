@@ -1,10 +1,10 @@
 use crate::*;
-use tokio_postgres::{Client, Statement};
+use tokio_postgres::{Transaction, Statement};
 use helium_api::models::transactions::Reward;
 use std::convert::TryFrom;
 
-pub async fn prepare(client: &Client) -> Result<Statement>{
-  let stmt = client.prepare("INSERT INTO rewards (block, transaction_hash, time, account, gateway, amount, type) 
+pub async fn prepare<'a>(pgtran: &'a Transaction<'a>) -> Result<Statement>{
+  let stmt = pgtran.prepare("INSERT INTO rewards (block, transaction_hash, time, account, gateway, amount, type)
     VALUES ($1, $2, $3, $4, $5, $6, $7)").await;
   match stmt {
     Ok(s) => Ok(s),
@@ -12,12 +12,12 @@ pub async fn prepare(client: &Client) -> Result<Statement>{
   }
 }
 
-pub async fn add_reward(client: &Client, 
+pub async fn add_reward<'a>(pgtran: &'a Transaction<'a>,
   block: u64, 
   time: u64, 
   hash: String, 
   reward: &Reward) -> Result<Vec<tokio_postgres::Row>> {
-  let stmt = prepare(&client).await.unwrap();
+  let stmt = prepare(&pgtran).await.unwrap();
   let gateway: &String;
   let default: &String = &String::from("1Wh4bh");
 
@@ -31,7 +31,7 @@ pub async fn add_reward(client: &Client,
     None => default,
   };
 
-  match client.query(&stmt, &[&i64::try_from(block).unwrap(), 
+  match pgtran.query(&stmt, &[&i64::try_from(block).unwrap(),
       &hash, 
       &i64::try_from(time).unwrap(), 
       &account, 

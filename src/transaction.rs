@@ -1,11 +1,11 @@
 use crate::*;
-use tokio_postgres::{Client, Statement};
+use tokio_postgres::{Statement, Transaction as PgTransaction};
 use std::convert::TryFrom;
 use helium_jsonrpc::Transaction;
 use tokio_postgres::types::{Json};
 
-pub async fn prepare(client: &Client) -> Result<Statement>{
-  let stmt = client.prepare(r#"INSERT INTO transactions (block, hash, type, fields) 
+pub async fn prepare<'a>(pgtran: &'a PgTransaction<'a>) -> Result<Statement>{
+  let stmt = pgtran.prepare(r#"INSERT INTO transactions (block, hash, type, fields)
     VALUES ($1, $2, CAST(CAST($3 AS VARCHAR) AS "transaction_type"), $4)"#).await;
   match stmt {
     Ok(s) => Ok(s),
@@ -13,15 +13,15 @@ pub async fn prepare(client: &Client) -> Result<Statement>{
   }
 }
 
-pub async fn add_transaction(client:  &Client, 
+pub async fn add_transaction<'a>(pgtran: &'a PgTransaction<'a>,
   block: u64, 
   hash: String, 
   r#type: &str, 
   transaction: Transaction) -> Result<Vec<tokio_postgres::Row>> {
-  let stmt = prepare(&client).await.unwrap();
+  let stmt = prepare(&pgtran).await.unwrap();
   let fields = Json(transaction);
 
-  match client.query(&stmt, &[&i64::try_from(block).unwrap(),
+  match pgtran.query(&stmt, &[&i64::try_from(block).unwrap(),
     &hash,
     &r#type,
     &fields]).await {
