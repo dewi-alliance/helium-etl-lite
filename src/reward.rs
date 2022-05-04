@@ -1,7 +1,7 @@
 use crate::*;
 use tokio_postgres::{Transaction, Statement};
 use helium_api::models::transactions::Reward;
-use std::convert::TryFrom;
+use std::{convert::TryFrom};
 
 pub async fn prepare<'a>(pgtran: &'a Transaction<'a>) -> Result<Statement>{
   let stmt = pgtran.prepare("INSERT INTO rewards (block, transaction_hash, time, account, gateway, amount, type)
@@ -25,18 +25,22 @@ pub async fn add_reward<'a>(pgtran: &'a Transaction<'a>,
     Some(g) => g,
     None => default,
   };
+
   // for overages
   let account = match &reward.account {
     Some(a) => a,
     None => default,
   };
 
+  let amount = Into::<u64>::into(reward.amount);
+  let amount = i64::try_from(amount).map_err(|e| Error::Custom(format!("failed to convert amount {} to u64: {}", amount, e.to_string())))?;
+
   match pgtran.query(&stmt, &[&i64::try_from(block).unwrap(),
       &hash, 
       &i64::try_from(time).unwrap(), 
       &account, 
       &gateway,
-      &i64::try_from(reward.amount).unwrap(),
+      &amount,
       &reward.r#type]).await {
     Ok(v) => Ok(v),
     Err(e) => {
