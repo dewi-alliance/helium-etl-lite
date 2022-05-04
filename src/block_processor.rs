@@ -29,8 +29,8 @@ impl<'a> BlockProcessor<'a> {
         match blocks::get_raw(&self.client, &self.height).await {
             Ok(b) => self.load_block(b).await?,
             Err(e) => {
-                error!(self.logger, "Couldn't get block {}: {}", self.height, e);
-                return Err(error::Error::Custom(format!("couldn't get block {}: {}", self.height, e)))
+                error!(self.logger, "Couldn't get block {}: {:?}", self.height, e);
+                return Err(error::Error::Custom(format!("couldn't get block {}: {:?}", self.height, e)))
             },
         }
 
@@ -59,13 +59,11 @@ impl<'a> BlockProcessor<'a> {
                   Ok(t) => match t {
                     Transaction::RewardsV2(rewards) => rewards.rewards,
                     _ => {
-                      error!(self.logger, "Error getting rewards txn: '{}'", txn.hash);
                       return Err(error::Error::Custom(format!("Error getting rewards txn: '{}'", txn.hash)))
                     }
                   },
                   Err(e) => {
-                    error!(self.logger, "Error getting rewards txn: '{}' {}", txn.hash, e);
-                    return Err(error::Error::Custom(format!("Error getting rewards txn: '{}' {}", txn.hash, e)))
+                    return Err(error::Error::Custom(format!("Error getting rewards txn: '{}' {:?}", txn.hash, e)))
                   }
                 };
                 info!(self.logger, "rewards in block {} with {}", block.height.to_string(), rewards.len());
@@ -74,7 +72,9 @@ impl<'a> BlockProcessor<'a> {
                     EtlMode::Rewards | EtlMode::Full => {
                       match reward::add_reward(&self.pgtran, block.height, block.time, block.hash.to_string(), &r).await {
                         Ok(_) => (),
-                        Err(e) => error!(self.logger, "Error adding reward {}", e),
+                        Err(e) => {
+                          return Err(Error::Custom(format!("Error adding reward {:?}", e)));
+                        },
                       }
                     },
                     EtlMode::Filters => {
@@ -86,7 +86,9 @@ impl<'a> BlockProcessor<'a> {
                                 info!(self.logger, "loading reward for account: {} -> {}", filter_account, r.r#type);
                                 match reward::add_reward(&self.pgtran, block.height, block.time, block.hash.to_string(), &r).await {
                                   Ok(_) => (),
-                                  Err(e) => error!(self.logger, "Error adding reward {}", e),
+                                  Err(e) => {
+                                    return Err(Error::Custom(format!("Error adding reward {:?}", e)));
+                                  },
                                 }                             
                                 continue 'rloop;
                               },
@@ -104,7 +106,9 @@ impl<'a> BlockProcessor<'a> {
                                 info!(self.logger, "loading reward for gateway: {} -> {}", filter_gateway, r.r#type);
                                 match reward::add_reward(&self.pgtran, block.height, block.time, block.hash.to_string(), &r).await {
                                   Ok(_) => (),
-                                  Err(e) => error!(self.logger, "Error adding reward {}", e),
+                                  Err(e) => {
+                                    return Err(Error::Custom(format!("Error adding reward {:?}", e)));
+                                  },
                                 }                                                           
                                 continue 'rloop;
                               },
@@ -126,13 +130,14 @@ impl<'a> BlockProcessor<'a> {
                 let transaction = match transactions::get(&self.client, &txn.hash).await {
                   Ok(t) => t,
                   Err(e) => {
-                    error!(self.logger, "Error getting transaction: [{}] {} {}",  txn.r#type, txn.hash, e);
-                    return Err(error::Error::Custom(format!("Error getting transaction: [{}] {} {}",  txn.r#type, txn.hash, e)))
+                    return Err(error::Error::Custom(format!("Error getting transaction: [{}] {} {:?}",  txn.r#type, txn.hash, e)))
                   }
                 };
                 match transaction::add_transaction(&self.pgtran, block.height, txn.hash.to_string(), txn.r#type.as_str(), transaction).await {
                   Ok(_) => (),
-                  Err(e) => error!(self.logger, "Error adding transaction: {}. {}", txn.hash, e),
+                  Err(e) => {
+                    return Err(Error::Custom(format!("Error adding transaction: {}. {:?}", txn.hash, e)));
+                  },
                 }
               },
               _ => (),              

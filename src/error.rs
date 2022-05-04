@@ -8,7 +8,7 @@ pub enum Error {
   PgError(#[from] tokio_postgres::Error), 
   #[error("config error")]
   Config(#[from] config::ConfigError),
-  #[error("custom error")]
+  #[error("custom error: {}", .0)]
   Custom(String),
   #[error("helium_jsonrpc error")]
   JrpcError(#[from] helium_jsonrpc::Error),
